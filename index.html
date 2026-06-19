@@ -285,9 +285,22 @@ kbd{font-family:inherit;font-weight:700;border:1px solid currentColor;border-rad
    RESPONSIVE
    ============================================================ */
 @media (max-width:880px){
+  /* mobile: cada slide rola verticalmente e o fundo cobre todo o conteúdo */
+  .slide{overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+  .slide:has(.bg-mist){background:#f3f6f4}
+  .slide:has(.bg-paper){background:#fff}
+  .slide:has(.bg-dark){background:#06251f}
+  .slide:has(.bg-teal){background:#0a5246}
+  .cover{background:#07332c}
+  /* afasta o conteúdo da barra de topo e dos botões fixos */
+  .pad{justify-content:flex-start;padding-top:78px;padding-bottom:94px}
+  .cover .pad{justify-content:flex-end;padding-top:78px}
+  .fs{display:none}
   .trend{flex-direction:column}
-  .trend .pad{flex:none;padding-bottom:0}
-  .trend .media{flex:none;padding:0 clamp(20px,5vw,40px) clamp(24px,5vw,40px);max-height:42vh}
+  .trend .pad{flex:none;padding-bottom:20px}
+  .trend .media{flex:none;max-height:none;padding:0 clamp(20px,5vw,40px) 94px}
+  .trend .shot.main{flex:none;height:40vh;min-height:230px}
+  .trend .shot-row{flex:none;height:22vh;min-height:150px}
   .tnum{display:none}
   .stat-grid{grid-template-columns:repeat(2,1fr)}
   .agenda{grid-template-columns:repeat(2,1fr)}
