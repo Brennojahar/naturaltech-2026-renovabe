@@ -243,6 +243,8 @@ kbd{font-family:inherit;font-weight:700;border:1px solid currentColor;border-rad
   opacity:0;transform:translateX(-10px);animation:mli .4s var(--ease-out) forwards}
 .modal-list li .dot{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--teal);color:#fff;
   display:grid;place-items:center;font-size:11px;font-weight:800}
+.modal-list li .thumb{flex:0 0 auto;width:48px;height:48px;border-radius:10px;object-fit:contain;
+  background:#fff;border:1px solid var(--line);padding:4px}
 @keyframes mli{to{opacity:1;transform:none}}
 
 /* media stack */
@@ -924,14 +926,26 @@ kbd{font-family:inherit;font-weight:700;border:1px solid currentColor;border-rad
   // ---- modal · produtos em destaque ----
   const PRODUCTS={
     proteina:{title:'Proteína em todo lugar',items:[
-      'Puravida Whey Protein Concentrado','Notorius Nutrition Whey Caramelo + Flor de Sal','SuperCoffee Protein+',
-      'Uzzy Bebida Proteica','Mineral Prot+ Água Proteica','A Tal da Castanha Shake Proteico',
-      'Cacow Aveia Proteica','Australia Choco Pops Protein 35','Mahta Barra Proteica Açaí com Camu-Camu',
-      'Pinc Bar Crispy','Inate Chia Pudding com colágeno']},
+      {n:'Puravida Whey Protein Concentrado',img:'puravida-whey.webp'},
+      {n:'Notorius Nutrition Whey Caramelo + Flor de Sal',img:'notorius-whey.jpg'},
+      {n:'SuperCoffee Protein+',img:'supercoffee-protein.png'},
+      {n:'Uzzy Bebida Proteica',img:'uzzy-bebida.png'},
+      {n:'Mineral Prot+ Água Proteica',img:'mineral-prot-agua.png'},
+      {n:'A Tal da Castanha Shake Proteico',img:'atal-castanha-shake.jpg'},
+      {n:'Cacow Aveia Proteica',img:'cacow-aveia.png'},
+      {n:'Australia Choco Pops Protein 35',img:'australia-choco-pops.png'},
+      {n:'Mahta Barra Proteica Açaí com Camu-Camu',img:'mahta-barra-acai.jpg'},
+      {n:'Pinc Bar Crispy',img:'pinc-bar-crispy.png'},
+      {n:'Inate Chia Pudding com colágeno',img:'inate-chia-pudding.webp'}]},
     liquida:{title:'Suplementação líquida e novos formatos',items:[
-      'True Morning Energy Protein','True Source Vitamina C Lipossomal','True Source Iron Liquid',
-      'Miya Liquid Collagen + Melatonina','Miya Colágeno Marinho em shots','Uzzy Bebida Proteica',
-      'Mineral Prot+ Água Proteica','Pibe Superfoods Gummies']}
+      {n:'True Morning Energy Protein',img:'true-morning-energy.png'},
+      {n:'True Source Vitamina C Lipossomal',img:'true-source-vitc.png'},
+      {n:'True Source Iron Liquid',img:'true-source-iron.jpg'},
+      {n:'Miya Liquid Collagen + Melatonina',img:'miya-liquid-collagen.jpg'},
+      {n:'Miya Colágeno Marinho em shots',img:'miya-colageno-marinho.jpg'},
+      {n:'Uzzy Bebida Proteica',img:'uzzy-bebida.png'},
+      {n:'Mineral Prot+ Água Proteica',img:'mineral-prot-agua.png'},
+      {n:'Pibe Superfoods Gummies',img:'pibe-gummies.jpg'}]}
   };
   const modal=document.getElementById('modal'),modalList=document.getElementById('modalList'),
         modalTitle=document.getElementById('modalTitle'),modalCount=document.getElementById('modalCount');
@@ -942,9 +956,11 @@ kbd{font-family:inherit;font-weight:700;border:1px solid currentColor;border-rad
     modalCount.textContent=d.items.length+' produtos em destaque';
     modalList.innerHTML='';
     d.items.forEach((p,i)=>{const li=document.createElement('li');li.style.animationDelay=(i*45)+'ms';
-      const dot=document.createElement('span');dot.className='dot';dot.textContent='✓';
-      const sp=document.createElement('span');sp.textContent=p;
-      li.appendChild(dot);li.appendChild(sp);modalList.appendChild(li);});
+      const im=document.createElement('img');im.className='thumb';im.src='img/products/'+p.img;
+      im.alt=p.n;im.decoding='async';
+      im.onerror=function(){const dot=document.createElement('span');dot.className='dot';dot.textContent='✓';li.replaceChild(dot,im);};
+      const sp=document.createElement('span');sp.textContent=p.n;
+      li.appendChild(im);li.appendChild(sp);modalList.appendChild(li);});
     modal.classList.add('open');modalOpen=true;
     lastFocus=document.activeElement;document.getElementById('modalClose').focus();
   }
