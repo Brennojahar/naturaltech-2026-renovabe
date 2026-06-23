@@ -260,11 +260,16 @@ kbd{font-family:inherit;font-weight:700;border:1px solid currentColor;border-rad
 .lightbox-back{position:absolute;inset:0;background:rgba(7,51,44,.8);backdrop-filter:blur(9px);
   opacity:0;transition:opacity .3s var(--ease)}
 .lightbox.open .lightbox-back{opacity:1}
-.lightbox-fig{position:relative;z-index:2;max-width:min(720px,92vw);text-align:center;
-  transform:scale(.9);opacity:0;transition:transform .42s var(--ease-out),opacity .42s var(--ease-out)}
-.lightbox.open .lightbox-fig{transform:none;opacity:1}
+.lightbox-fig{position:relative;z-index:2;max-width:min(720px,92vw);text-align:center}
 .lightbox-fig img{max-width:100%;max-height:76vh;object-fit:contain;border-radius:18px;background:#fff;
-  padding:20px;box-shadow:0 44px 100px -30px rgba(0,0,0,.65)}
+  padding:20px;box-shadow:0 44px 100px -30px rgba(0,0,0,.65);transform-origin:center center;
+  will-change:transform,filter}
+@keyframes lbblur{0%{filter:blur(0)}45%{filter:blur(8px)}100%{filter:blur(0)}}
+.lightbox-fig img.lb-anim{animation:lbblur .56s cubic-bezier(.22,1,.36,1)}
+@keyframes lbcapIn{from{transform:translateY(-24px);opacity:0}to{transform:translateY(0);opacity:1}}
+.lightbox.open .lightbox-cap{animation:lbcapIn .46s .18s both cubic-bezier(.22,1,.36,1)}
+.lightbox.closing .lightbox-back{opacity:0}
+.lightbox.closing .lightbox-cap{animation:none;opacity:0;transition:opacity .3s var(--ease)}
 .lightbox-cap{margin-top:18px;color:#fff;font-weight:700;font-size:clamp(15px,1.9vw,21px);letter-spacing:-.01em}
 .lightbox-close{position:absolute;top:22px;right:24px;z-index:3;width:46px;height:46px;border-radius:50%;
   border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font-size:18px;
@@ -997,8 +1002,8 @@ kbd{font-family:inherit;font-weight:700;border:1px solid currentColor;border-rad
       im.onerror=function(){const dot=document.createElement('span');dot.className='dot';dot.textContent='✓';li.replaceChild(dot,im);};
       const sp=document.createElement('span');sp.textContent=p.n;
       li.appendChild(im);li.appendChild(sp);
-      li.addEventListener('click',()=>openLightbox('img/products/'+p.img,p.n));
-      li.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openLightbox('img/products/'+p.img,p.n);}});
+      li.addEventListener('click',()=>openLightbox('img/products/'+p.img,p.n,li.querySelector('.thumb,.dot')||li));
+      li.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openLightbox('img/products/'+p.img,p.n,li.querySelector('.thumb,.dot')||li);}});
       modalList.appendChild(li);});
     modal.classList.add('open');modalOpen=true;
     lastFocus=document.activeElement;document.getElementById('modalClose').focus();
@@ -1011,10 +1016,50 @@ kbd{font-family:inherit;font-weight:700;border:1px solid currentColor;border-rad
 
   // ---- lightbox · foto ampliada ----
   const lightbox=document.getElementById('lightbox'),lbImg=document.getElementById('lbImg'),lbCap=document.getElementById('lbCap');
-  let lbOpen=false;
-  function openLightbox(src,name){lbImg.src=src;lbImg.alt=name;lbCap.textContent=name;
-    lightbox.classList.add('open');lbOpen=true;document.getElementById('lbClose').focus();}
-  function closeLightbox(){lightbox.classList.remove('open');lbOpen=false;}
+  let lbOpen=false,lastThumb=null;
+  // FLIP: anima a imagem da posição da miniatura (esquerda) até o centro, crescendo + motion blur
+  function flipFrom(thumbEl){
+    const e=lbImg.getBoundingClientRect(); if(!e.width||!thumbEl) return;
+    const s=thumbEl.getBoundingClientRect();
+    const sc=Math.max(s.width/e.width,0.05);
+    const dx=(s.left+s.width/2)-(e.left+e.width/2);
+    const dy=(s.top+s.height/2)-(e.top+e.height/2);
+    lbImg.style.transition='none';
+    lbImg.style.transform='translate('+dx+'px,'+dy+'px) scale('+sc+')';
+    void lbImg.offsetWidth;                                   // reflow: pinta no ponto de partida (sem flash)
+    lbImg.classList.remove('lb-anim');void lbImg.offsetWidth;lbImg.classList.add('lb-anim'); // (re)dispara o motion blur
+    requestAnimationFrame(function(){
+      lbImg.style.transition='transform .56s cubic-bezier(.22,1,.36,1)';
+      lbImg.style.transform='none';                            // desliza ao centro, crescendo
+    });
+  }
+  function resetLb(){lbImg.classList.remove('lb-anim');lbImg.style.transition='';lbImg.style.transform='';lbImg.style.opacity='';}
+  function openLightbox(src,name,thumbEl){
+    lastThumb=thumbEl||null;lbImg.alt=name;lbCap.textContent=name;
+    const go=function(){
+      lightbox.classList.remove('closing');lightbox.classList.add('open');
+      lbImg.style.opacity='';
+      flipFrom(thumbEl);lbOpen=true;document.getElementById('lbClose').focus();
+    };
+    if(lbImg.getAttribute('src')===src && lbImg.complete && lbImg.naturalWidth){go();}
+    else{lbImg.onload=function(){lbImg.onload=null;go();};lbImg.onerror=function(){lbImg.onload=null;go();};lbImg.src=src;}
+  }
+  function closeLightbox(){
+    if(!lbOpen)return;lbOpen=false;
+    const e=lbImg.getBoundingClientRect();
+    const s=lastThumb?lastThumb.getBoundingClientRect():null;
+    if(s&&e.width){                                            // volta deslizando para a miniatura
+      const sc=Math.max(s.width/e.width,0.05);
+      const dx=(s.left+s.width/2)-(e.left+e.width/2);
+      const dy=(s.top+s.height/2)-(e.top+e.height/2);
+      lightbox.classList.add('closing');
+      lbImg.classList.remove('lb-anim');void lbImg.offsetWidth;lbImg.classList.add('lb-anim');
+      lbImg.style.transition='transform .46s cubic-bezier(.4,0,.2,1),opacity .46s';
+      lbImg.style.transform='translate('+dx+'px,'+dy+'px) scale('+sc+')';
+      lbImg.style.opacity='0';
+      setTimeout(function(){lightbox.classList.remove('open','closing');resetLb();},460);
+    }else{lightbox.classList.remove('open');resetLb();}
+  }
   lightbox.addEventListener('click',e=>{if(e.target.hasAttribute('data-lbclose'))closeLightbox();});
 
   // hash support (#3)
