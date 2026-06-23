@@ -173,9 +173,13 @@ kbd{font-family:inherit;font-weight:700;border:1px solid currentColor;border-rad
 .thesis .lead{color:#dff0ec;font-size:clamp(15px,1.7vw,21px);max-width:60ch;margin-top:24px}
 .agenda{margin-top:clamp(26px,4vh,46px);display:grid;grid-template-columns:repeat(3,1fr);
   gap:10px;max-width:920px}
-.ag{display:flex;gap:12px;align-items:baseline;padding:14px 16px;border-radius:14px;
+.ag{display:flex;gap:12px;align-items:baseline;padding:14px 16px;border-radius:14px;cursor:pointer;
   background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);transition:.3s var(--ease)}
-.ag:hover{background:rgba(255,255,255,.1);transform:translateY(-2px)}
+.ag:hover{background:rgba(255,255,255,.14);transform:translateY(-2px)}
+.ag:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.ag::after{content:"→";margin-left:auto;align-self:center;color:var(--amber);font-weight:800;
+  opacity:0;transform:translateX(-4px);transition:opacity .2s var(--ease),transform .2s var(--ease)}
+.ag:hover::after{opacity:.95;transform:none}
 .ag .n{font-weight:800;color:var(--amber);font-size:15px;font-variant-numeric:tabular-nums}
 .ag .t{font-weight:600;color:#eafaf6;font-size:clamp(13px,1.3vw,15.5px);line-height:1.25}
 
@@ -1066,6 +1070,14 @@ kbd{font-family:inherit;font-weight:700;border:1px solid currentColor;border-rad
     }else{done();}
   }
   lightbox.addEventListener('click',e=>{if(e.target.hasAttribute('data-lbclose'))closeLightbox();});
+
+  // índice (slide 3): cada tendência leva ao slide correspondente (01→slide 4 … 09→slide 12)
+  document.querySelectorAll('.agenda .ag').forEach(function(el,i){
+    const target=3+i;                       // slide 4 = índice 3
+    el.setAttribute('role','link');el.tabIndex=0;el.title='Ir para a tendência';
+    el.addEventListener('click',function(){go(target);});
+    el.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go(target);}});
+  });
 
   // hash support (#3)
   const h=parseInt(location.hash.replace('#',''),10);
